@@ -64,6 +64,8 @@ K = data[13]
 
 # load Coma Ber
 data = np.genfromtxt("/Users/angusr/Python/Gyro/data/ComaBer.txt", skip_header=1).T
+ID = data[0]
+period = data[1]
 j_k = data[2]
 
 # dereddened J-K
@@ -84,11 +86,27 @@ plt.plot((JK), teff[a], 'k.')
 plt.plot(xs, teff_fit, 'b-')
 
 # find teffs
-teff = np.polyval(p, j_k)
-print teff
+newteff = np.polyval(p, j_k)
 
-plt.plot(j_k, teff, 'ro')
+plt.plot(j_k, newteff, 'ro')
 plt.savefig("JK2teff")
 
-feh = np.zeros_like(teff)
-bv = teff2bv_orig(teff, logg, feh)
+feh = np.zeros_like(newteff)
+newlogg = np.zeros_like(newteff)
+
+# find loggs
+def find_nearest(array,value):
+    idx = (np.abs(array-value)).argmin()
+    return array[idx]
+
+for i, t in enumerate(newteff):
+    l = teff==find_nearest(teff, t)
+    newlogg[i] = logg[l][0]
+
+bv = teff2bv_orig(newteff, newlogg, feh)
+
+data = np.zeros((2, len(newteff)))
+data[0:] = period
+data[1:] = bv
+
+np.savetxt('/Users/angusr/Python/Gyro/data/ComaBer_bv.txt', data.T)
