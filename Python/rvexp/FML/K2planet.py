@@ -5,6 +5,9 @@ import astropy.constants as const
 # My model starts with a time of transit (t90), period, and mass.
 # I solve for time of periapse:
 
+# the true anomaly, f is defined as 90 or pi/2 at the time of central transit.
+# the time dependence comes in because you know the period and you know the time of central transit.
+
 Mstar = .770 * const.M_sun
 Mstar_err = 0.018 * const.M_sun
 ecc = 0.
