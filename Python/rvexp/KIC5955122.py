@@ -29,11 +29,20 @@ n = np.isfinite(x)*np.isfinite(y)*np.isfinite(yerr)*(q==0) * (x < 1)
 x, y, yerr = x[n], y[n], yerr[n]
 y -= np.median(y)
 
+# from BGdata import BetaGem
+# BG = BetaGem()
+# x = BG.fHJD - BG.fHJD[0]
+# y, yerr = BG.flux-np.median(BG.flux), BG.flux_err
+# l = x < .05
+# x, y, yerr = x[l], y[l], yerr[l]
+# x = np.arange(len(y))
+
 plt.clf()
 plt.subplot(2,1,1)
 plt.errorbar(x, y, yerr=yerr, fmt='k.', capsize=0, ecolor='.8')
 
 theta = [2e5, .05, 10, 1000, .1]
+# theta = [.16, .1 ** 2, .5, .01, .5]
 xs = np.linspace(min(x), max(x), 100)
 
 # k = kernel(theta)
@@ -64,10 +73,13 @@ def predict(xs):
 
 from scipy.misc import derivative
 derivs = derivative(predict, xs)
+print predict(xs)
+print derivs
 
 plt.subplot(2,1,2)
 rvx = xs
 rv_err = .5 + np.random.rand(len(rvx))
+# rv_err = .00000001
 rvs = derivs/100. #+ np.random.uniform(-1, 1)*rv_err
 rvs += np.random.randn(len(rvx)) * rv_err
 plt.errorbar(xs, rvs, yerr=rv_err, fmt='k.',
@@ -75,4 +87,5 @@ plt.errorbar(xs, rvs, yerr=rv_err, fmt='k.',
 plt.plot(rvx, derivs/100., color=ocols[2])
 plt.xlabel('$\mathrm{Time~(Days)}$')
 plt.ylabel('$\mathrm{RV~(ms}_{-1}\mathrm{)}$')
-plt.savefig('rvs')
+plt.show()
+# plt.savefig('rvs')
