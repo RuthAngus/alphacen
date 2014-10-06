@@ -7,6 +7,8 @@ import george
 from george.kernels import ExpSquaredKernel, ExpSine2Kernel, WhiteKernel, CosineKernel
 from scipy.misc import derivative
 from scipy.optimize import minimize, fmin
+from colors import plot_colors
+ocols = plot_colors()
 
 def predict(xs, theta, y, yerr):
     k = theta[0] * ExpSquaredKernel(theta[1]) * ExpSine2Kernel(theta[2], theta[4])
@@ -33,7 +35,7 @@ def fit_rv(theta, x, y, yerr, xs):
     # plot initial guess
     plt.clf()
     plt.errorbar(x, y, yerr=yerr, fmt='k.', capsize=0, ecolor='.8')
-    plt.plot(xs, mu, 'r')
+    plt.plot(xs, mu, color=ocols.orange)
     plt.savefig('init_rv_fit')
 
 #     pars, res = gp.optimize(x, y, yerr)
@@ -50,6 +52,6 @@ def fit_rv(theta, x, y, yerr, xs):
 
 #     mu, cov = gp.predict(y, xs)
 
-    derivs = derivative(predict, xs, args=(theta, y, yerr))
+#     derivs = derivative(predict, xs, args=(theta, y, yerr))
 
-    return mu, cov, derivs
+    return mu, cov  # , derivs
