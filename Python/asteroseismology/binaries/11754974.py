@@ -18,22 +18,23 @@ def testing():
     ys, A = fit_single_sine(x, y, 2)
     plt.plot(x, ys, 'r')
     plt.show()
-    print find_phase(x, A, 2.)/np.pi
+    print find_phase(A)/np.pi
 
 # calculate the periodogram for plotting
-def pgram(x, y, yerr):
+def pgram(x, y, peak1):
     fs = np.linspace(5, 45, 10000) # c/d
     ws = 2*np.pi*fs  # lombscargle uses angular frequencies
     pgram = lombscargle(x, y, ws)
     plt.clf()
     plt.subplot(2, 1, 1)
-    plt.errorbar(x, y, yerr=yerr, fmt='k.', capsize=0, ecolor='.8')
+#     plt.errorbar(x, y, yerr=yerr, fmt='k.', capsize=0, ecolor='.8')
+    plt.plot(x, y, 'k.')
     plt.subplot(2, 1, 2)
     plt.xlabel('$\mu~c/d$')
     plt.axvline(peak1, color='r')
     plt.plot(ws/(2*np.pi), pgram)
-    plt.savefig('KIC%s' % KID)
-    print 'KIC%s.png' % KID
+    plt.show()
+    raw_input('enter')
 
 # find the phases of each segment
 def all_phases(xl, yl, peak):
@@ -42,7 +43,7 @@ def all_phases(xl, yl, peak):
     for i in range(nsegs):
         if len(xl[i]):  # make sure you don't have an empty array
             ysl, Al = fit_single_sine(xl[i], yl[i], peak)
-            phis[i] = find_phase(xl[i], Al, peak)
+            phis[i] = find_phase(Al)
     return phis
 
 # returns list of lists of the full time series broken down into nsegs
@@ -79,15 +80,11 @@ def fit_single_sine(x, y, w):
     ys += A[2]
     return ys, A
 
-def find_phase(t, A, w):
-    t -= t[0]
-    a, b, d = A
-    c = np.sqrt(a**2 + b**2)
-    phi = np.arcsin((a*np.sin(w*t[0]) + b*np.cos(w*t[0])) / c) - w*t[0]
-    return phi
+def find_phase(A):
+     return np.arctan(A[1]/A[0])
 
 # load data, median normalise and join together
-def load_join(KID, nquarters, sc=False):
+def load_join(KID, sc=False):
     if sc == True:
         lc_files = \
                 glob.glob("/Users/angusr/.kplr/data/lightcurves/%s/*_slc.fits"
@@ -115,8 +112,6 @@ def load_join(KID, nquarters, sc=False):
             x = np.concatenate((x, t))
             y = np.concatenate((y, flux))
             yerr = np.concatenate((yerr, flux_err))
-        if i == nquarters-1:
-            break
 
     # convert ys to float64
     y2 = np.empty((len(y)))
@@ -130,7 +125,7 @@ if __name__ == "__main__":
 
     # load data
     KID = "11754974"
-    x, y, yerr = load_join(KID, 15)
+    x, y, yerr = load_join(KID)
 
 #     plt.clf()
 #     plt.errorbar(x, y, yerr=yerr, **reb)
@@ -145,6 +140,7 @@ if __name__ == "__main__":
     xl, yl, BJD = segment(x, y, ndays, nsegs)
 
     phis1 = all_phases(xl, yl, peak1)
+    print phis1, np.mean(phis1)
     times1 = light_travel_time(phis1, peak1) * 24*3600
     phis2 = all_phases(xl, yl, peak2)
     times2 = light_travel_time(phis2, peak2) * 24*3600
@@ -155,8 +151,9 @@ if __name__ == "__main__":
     mean_times = np.mean(times, axis=0)
 
     plt.clf()
-    plt.plot(BJD, times1, '.')
-    plt.plot(BJD, times2, '.')
-    plt.plot(BJD, times3, '.')
-    plt.plot(BJD, mean_times)
+    plt.plot(BJD, phis1, '.')
+#     plt.plot(BJD, times1, '.')
+#     plt.plot(BJD, times2, '.')
+#     plt.plot(BJD, times3, '.')
+#     plt.plot(BJD, mean_times)
     plt.show()
