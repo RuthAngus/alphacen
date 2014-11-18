@@ -56,7 +56,6 @@ def segment(x, y, yerr, ndays, nsegs):  # nseg is zero counted
         xs.append(x[l])
         ys.append(y[l])
         yerrs.append(yerr[l])
-
     BJD = np.zeros(len(xs))
     for i in range(len(xs)):
         if len(xs[i]):
@@ -65,7 +64,6 @@ def segment(x, y, yerr, ndays, nsegs):  # nseg is zero counted
         else:
             BJD[i] = xs[i-n][0] + 10 * n
             n += 1
-
     return xs, ys, yerrs, BJD
 
 def light_travel_time(phis, nu):
@@ -96,6 +94,9 @@ def fit_single_sine(x, y, w):
 
 def find_phase(A):
      return np.arctan(A[1]/A[0])
+
+def correlate(y1, y2):
+    phase = sps.signaltools.correlate(y1, y2)
 
 # load data, median normalise and join together
 def load_join(KID, nquarters, sc=False):
@@ -137,41 +138,67 @@ def load_join(KID, nquarters, sc=False):
 
     return x, y, yerr
 
-if __name__ == "__main__":
-
-    # load data
-    KID = "11754974"
-    x, y, yerr = load_join(KID, 15)
-
-#     plt.clf()
-#     plt.errorbar(x, y, yerr=yerr, **reb)
-#     plt.show()
-#     raw_input('enter')
-
-    peak1, peak2, peak3 = 16.34, 21.40, 20.91
+def analysis(x, y, yerr, peaks, ndays):
 
     # divide data into nsegs segments of ndays days
-    ndays = 10
     nsegs = int((max(x)-min(x))/ndays)
-
     print nsegs, 'nsegs'
     xl, yl, yerrl, BJD = segment(x, y, yerr, ndays, nsegs)
 
-    phis1 = all_phases(xl, yl, yerrl, peak1)
-    print phis1, np.mean(phis1)
-    times1 = light_travel_time(phis1, peak1) * 24*3600
-    phis2 = all_phases(xl, yl, yerrl, peak2)
-    times2 = light_travel_time(phis2, peak2) * 24*3600
-    phis3 = all_phases(xl, yl, yerrl, peak3)
-    times3 = light_travel_time(phis3, peak3) * 24*3600
+    phis = np.zeros((nsegs, len(peaks)))
+    times = np.zeros((nsegs, len(peaks)))
+#     plt.clf()
+    cols = ['b', 'g', 'r']
+    for i in range(len(peaks)):
+        phis[:, i] = all_phases(xl, yl, yerrl, 2*np.pi*peaks[i])
+        times[:, i] = light_travel_time(phis[:, i], 2*np.pi*peaks[i])*24*3600
+#         plt.plot(BJD, times[:, i], '.', color=cols[i])
+        plt.plot(BJD, phis[:, i]/np.pi, '-', color=cols[i])
 
-    times = np.vstack((times1, times2, times3))
-    mean_times = np.mean(times, axis=0)
+    mean_times = np.mean(times, axis=1)
+
+#     plt.plot(BJD, mean_times)
+    plt.show()
+
+if __name__ == "__main__":
+
+    # testing phase step
+    KID = "11754974"
+    peak = 16.34
+    x, y, yerr = load_join(KID, 15)
+
+    ndays = 10
+    # divide data into nsegs segments of ndays days
+    nsegs = int((max(x)-min(x))/ndays)
+    xl, yl, yerrl, BJD = segment(x, y, yerr, ndays, nsegs)
 
     plt.clf()
-#     plt.plot(BJD, phis1, '.')
-    plt.plot(BJD, times1, '.')
-    plt.plot(BJD, times2, '.')
-    plt.plot(BJD, times3, '.')
-    plt.plot(BJD, mean_times)
-    plt.show()
+    phi = np.linspace(0, np.pi, len(xl))
+    for i in range(len(xl)):
+        s = yerrl[i] * np.random.randn(len(yerrl[i]))
+        yl[i] = np.sin(peak*xl[i] + np.pi*phi[i]) + s
+    plt.plot(np.arange(xl[0][0], xl[-1][-1], 10), phi, 'r.')
+
+    peaks = np.array([16.34])
+    analysis(x, y, yerr, peaks, ndays)
+
+#     plt.clf()
+#     plt.plot(x, y, 'k.')
+#     plt.xlim(x[0], x[0]+10)
+#     plt.show()
+#
+#     ys, A = fit_single_sine(x, y, peak)
+#     phi = find_phase(A)
+#     print phi/np.pi
+
+#     ndays = 10
+#     # load data
+#     KID = "11754974"
+#     x, y, yerr = load_join(KID, 15)
+#     peaks = np.array([16.34, 21.40, 20.91])
+#     analysis(x, y, yerr, 2*np.pi*peaks, ndays)
+#     analysis(x, y, yerr, peaks, ndays)
+
+#     KID = "5459908"
+#     peaks = [12.0, 14.91, 8.6, 14.67, 15.11]
+#     analysis(KID, peaks, ndays)
