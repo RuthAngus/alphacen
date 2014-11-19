@@ -3,30 +3,34 @@ import matplotlib.pyplot as plt
 from rc_params import plot_params
 pp = plot_params()
 from astropy import constants
-import YY
-yy = YY.YonseiYale()
-sb = 5.67e-8
+from YREC import YREC
+yrec = YREC()
+
 L_sun = 3.846e26
 R_sun = 6.955e8
 
 def radius_sb(L, T):
-    # Stephan-Boltzmann
-#     return np.sqrt(L / (constants.sigma_sb * T**4))
-    return np.sqrt(L / (sb * T**4))
+    L *= L_sun
+    sb = 5.67e-8
+    return np.sqrt(L / (sb * T**4)) / R_sun
 
-def luminosity_sb(R, T):
-    return constants.sigma_sb * R**2 * T**4
+# for a given mass and teff, what is the radius?
+def rad(M, T):
 
-# M, L, T = yy.mass[0], 10**(yy.log_L[0])*L_sun, 10**(yy.log_teff[0])
-M, L, T = yy.mass, yy.log_L, 10**(yy.log_teff)
-R = radius_sb(L, T) / R_sun
+    # load isochrones
+    iso_M, iso_L, iso_T = yrec.mass, 10**yrec.logL, yrec.teff
 
-plt.clf()
-# plt.plot(M, R)
-plt.plot(T, L)
-# plt.xlim(plt.gca().get_xlim()[::-1])
-plt.xlim(8000, 4000)
-plt.ylim(0, 20)
-# plt.xlabel("$\mathrm{Mass~(M}_\odot\mathrm{)}$")
-# plt.ylabel("$\mathrm{Radius~(R}_\odot\mathrm{)}$")
-plt.show()
+    # find closest mass, closest teff and corresponding l
+    m = min(iso_M, key=lambda x:abs(x-M))
+    teff = min(iso_T, key=lambda x:abs(x-T))
+    l = iso_L[iso_M==m]  # warning: this is often degenerate!
+
+    return radius_sb(l[0], teff), m, teff, l
+
+if __name__ == "__main__":
+
+    rad(1.38375, 6000.)
+
+#     plt.clf()
+#     plt.plot(T, yrec.logL)
+#     plt.xlim(8000, 4000)

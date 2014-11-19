@@ -6,8 +6,16 @@ class YonseiYale(object):
 
     def __init__(self):
 
-        x, z = '74', '01'
-        x, z = '59', '06'
+        x, z = '53', '08'
+#         x, z = '59', '06'
+#         x, z = '71', '02'
+#         x, z = '749', '007'
+#         x, z = '74', '01'
+#         x, z = '758', '004'
+#         x, z = '767', '001'
+#         x, z = '7688', '0004'
+#         x, z = '7697', '0001'
+#         x, z = '76997', '00001'
 
         DIR = '/Users/angusr/angusr/isochrones/a0o2'
         files = glob.glob('%s/x%sz%s/m*x%sz%s.track1' % (DIR, x, z, x, z))
@@ -18,7 +26,6 @@ class YonseiYale(object):
         log_Ls = np.zeros((npts, len(files)))
         masses = np.zeros((npts, len(files)))
 
-        ms = []
         for i, f in enumerate(files):
             m = np.float('%s.%s' % (f[45:46], f[46:47]))
 
